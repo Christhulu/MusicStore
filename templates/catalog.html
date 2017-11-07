@@ -1,0 +1,43 @@
+{% include "header.html" %}
+<div class="container" id="items">
+        <h1 class="text-center">Newest Item</h1>
+        <div class="thumbnail">
+            <h4 class="text-center" style="color:blue;">{{newestItem.category.name}}</h4>
+            <h4 class="text-center">{{newestItem.name}}</h4>
+            <hr>
+            <img src="{{newestItem.image}}" width="200" class="img-fluid text-center center-block" />
+            <br>
+            <br>
+            <p class="item-info">
+                <ul class="text-center item-info list-unstyled">
+                    <li><b>Description:</b> {{newestItem.description}}</li>
+                    <li><b>Price: </b> {{newestItem.price}}</li>
+                </ul>
+            </p>
+    </div>
+        <h1 class="text-center">All Items</h1>
+        <h5 class="text-center"><a href="{{url_for('newCategories')}}">New Category</a></h5>
+    <div class="row">
+        {% for i in items%}
+        <div class="single-item thumbnail col-md-3 col-sm-3">
+            <h4 class="text-center" style="color:blue;">{{i.category.name}}</h4>
+            <h4 class="text-center">{{i.name}}</h4>
+            <hr>
+            <img src="{{i.image}}" width="200" class="img-fluid text-center center-block" />
+            <br>
+            <br>
+            <p class="item-info">
+                <ul class="text-center item-info list-unstyled">
+                    <li><b>Description:</b> {{i.description}}</li>
+                    <li><b>Price: </b> {{i.price}}</li>
+                    <li><a href="{{url_for('itemPage',item_id=i.id, category_id=i.category_id)}}">More Info</a></li>
+                    <hr>
+            <br>
+            <br>
+                </ul>
+            </p>
+        </div>
+        {% endfor%}
+    </div>
+</div>
+

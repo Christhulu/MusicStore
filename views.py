@@ -220,7 +220,10 @@ def showCategories():
 @app.route('/catalog/new', methods=['POST','GET'])
 def newCategories():
     categories = session.query(Category).order_by(asc(Category.name))
-    if request.method == 'POST' and 'username' in login_session:
+
+    #Authorization
+    creator = getUserInfo(categories.user_id)
+    if request.method == 'POST' and creator.id != login_session['user_id']:
         newCategory = Category(name=request.form['name'])
         session.add(newCategory)
         flash('New Category \"%s\" Successfully Created' % newCategory.name)
@@ -234,20 +237,22 @@ def newCategories():
 @app.route('/catalog/<int:category_id>/edit/', methods=['GET', 'POST'])
 def editCategories(category_id):
     categories = session.query(Category).order_by(asc(Category.name))
-    editCategories = session.query(Category).filter_by(id=category_id).one()
+    editCategory = session.query(Category).filter_by(id=category_id).one()
 
-    if request.method == 'POST' and 'username' in login_session:
+    #Authorization
+    creator = getUserInfo(editCategory.user_id) 
+    if request.method == 'POST' and creator.id != login_session['user_id']:
         if request.form['name']:
-            editCategories.name = request.form['name']
-            session.add(editCategories)
+            editCategory.name = request.form['name']
+            session.add(editCategory)
             session.commit()
-            flash('Category Successfully Edited \"%s\"' % editCategories.name)
+            flash('Category Successfully Edited \"%s\"' % editCategory.name)
             return redirect(url_for('showCategories'))
     else:
         flash('Log In if you want to edit this category')
         return render_template('editCategory.html', 
                                 categories=categories, 
-                                category=editCategories)
+                                category=editCategory)
 
 @login_required
 @app.route('/catalog/<int:category_id>/delete/', methods=['GET', 'POST'])
@@ -255,17 +260,19 @@ def deleteCategories(category_id):
     categories = session.query(Category).order_by(asc(Category.name))
     deleteCategory = session.query(Category).filter_by(id=category_id).one()
 
-    if request.method == 'POST' and 'username' in login_session:
+    #Authorization
+    creator = getUserInfo(deleteCategory.user_id) 
+    if request.method == 'POST' and creator.id != login_session['user_id']:
         session.delete(deleteCategory)
         flash('\"%s\" Successfully Deleted' % deleteCategory.name)
         session.commit()
         return redirect(url_for('showCategories', category_id=category_id))
     else:
-        flash('Log In if you want to delete this item')
+        flash('This category is not yours to delete')
         return render_template('deleteCategory.html', 
                                 category=deleteCategory,
                                 categories=categories)
-
+@login_required
 @app.route('/catalog/<int:category_id>/')
 def showItems(category_id):
     categories = session.query(Category).order_by(Category.name.asc()).all()
@@ -277,6 +284,7 @@ def showItems(category_id):
                             category=category)
 
 # Item CRUD operations
+@login_required
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/')
 def itemPage(category_id,item_id):
     categories = session.query(Category).order_by(asc(Category.name))
@@ -290,8 +298,10 @@ def itemPage(category_id,item_id):
 @login_required
 @app.route('/catalog/<int:category_id>/new', methods=['POST','GET'])
 def newItem(category_id):
-    category = session.query(Category).filter_by(id=category_id).one()    
-    if request.method == 'POST' and 'username' in login_session:
+    category = session.query(Category).filter_by(id=category_id).one()  
+
+    creator = getUserInfo(category.user_id)  
+    if request.method == 'POST' and creator.id != login_session['user_id']:
         newItem = Item(name=request.form['name'],
                        description=request.form['description'],
                        price = request.form['price'],
@@ -314,7 +324,9 @@ def editItem(category_id,item_id):
     category = session.query(Category).filter_by(id=category_id).one()
     editItem = session.query(Item).filter_by(id=item_id).one()
 
-    if request.method == 'POST' and 'username' in login_session:
+    #Authorization
+    creator = getUserInfo(editItem.user_id)
+    if request.method == 'POST' and creator.id != login_session['user_id']:
         if request.form['name']:
             editItem.name = request.form['name']
         if request.form['description']:
@@ -340,12 +352,15 @@ def editItem(category_id,item_id):
 def deleteItem(category_id,item_id):
     deleteItem = session.query(Item).filter_by(id=item_id).one()
 
-    if request.method == 'POST' and 'username' in login_session:
+    #Authorization
+    creator = getUserInfo(deleteItem.user_id)
+    if request.method == 'POST' and creator.id != login_session['user_id']:
         session.delete(deleteItem)
         flash('\"%s\" Successfully Deleted' % deleteItem.name)
         session.commit()
         return redirect(url_for('showCategories', category_id=category_id))
     else:
+        flash('This is not your item to delete')
         return render_template('deleteItem.html', 
                                 item=deleteItem,
                                 category_id=category_id)

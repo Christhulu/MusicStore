@@ -186,6 +186,15 @@ def gdisconnect():
         return response
 
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' in login_session:
+            return f(*args, **kwargs)
+        else:
+            flash('You are not allowed to access there')
+            return redirect('/login')
+    return decorated_function
 
 
 
@@ -207,6 +216,7 @@ def showCategories():
                             newestItem=newestItem)
 
 # Category CRUD operations
+@login_required
 @app.route('/catalog/new', methods=['POST','GET'])
 def newCategories():
     categories = session.query(Category).order_by(asc(Category.name))
@@ -220,6 +230,7 @@ def newCategories():
         flash('Log In if you want to edit this category')
         return render_template('newCategory.html',categories=categories)
 
+@login_required
 @app.route('/catalog/<int:category_id>/edit/', methods=['GET', 'POST'])
 def editCategories(category_id):
     categories = session.query(Category).order_by(asc(Category.name))
@@ -238,6 +249,7 @@ def editCategories(category_id):
                                 categories=categories, 
                                 category=editCategories)
 
+@login_required
 @app.route('/catalog/<int:category_id>/delete/', methods=['GET', 'POST'])
 def deleteCategories(category_id):
     categories = session.query(Category).order_by(asc(Category.name))
@@ -274,6 +286,8 @@ def itemPage(category_id,item_id):
                             category_id=category_id,
                             item_id=item_id,
                             categories=categories)
+
+@login_required
 @app.route('/catalog/<int:category_id>/new', methods=['POST','GET'])
 def newItem(category_id):
     category = session.query(Category).filter_by(id=category_id).one()    
@@ -293,6 +307,7 @@ def newItem(category_id):
                                 category_id=category_id,
                                 category=category)
 
+@login_required
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/edit', methods=['POST','GET'])
 def editItem(category_id,item_id):
     categories = session.query(Category).order_by(asc(Category.name))
@@ -320,6 +335,7 @@ def editItem(category_id,item_id):
                                 item=editItem, 
                                 categories=categories)
 
+@login_required
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/delete', methods=['POST','GET'])
 def deleteItem(category_id,item_id):
     deleteItem = session.query(Item).filter_by(id=item_id).one()

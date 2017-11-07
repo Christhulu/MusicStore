@@ -8,6 +8,8 @@ This project is an item catalog which uses Python (Flask) and SQL. Items in the 
 
 Instructions
 ============================
+
+Run lotsofitems.py using the command `python lotsofitems.py`
 Run views.py using the command `python views.py`
 Access localhost:5000 to start navigating the catalog
 

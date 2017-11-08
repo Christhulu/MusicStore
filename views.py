@@ -23,7 +23,7 @@ CLIENT_ID = json.loads(
 APPLICATION_NAME = "Item-Catalog"
 
 # Connect to Database and create database session
-engine = create_engine('sqlite:///itemcatalog.db')
+engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -217,9 +217,9 @@ def login_required(f):
 @app.route('/catalog/')
 def showCategories():
     categories = session.query(Category).order_by(asc(Category.name))
-    items = session.query(Item).filter_by(category_id=Category.id)
+    items = session.query(Items).filter_by(category_id=Category.id)
     # Display the newest item on the page
-    newestItem = session.query(Item).order_by(Item.id.desc()).filter_by(category_id=Category.id).first()
+    newestItem = session.query(Items).order_by(Items.id.desc()).filter_by(category_id=Category.id).first()
     return render_template('catalog.html',
                            categories=categories,
                            items=items,
@@ -292,8 +292,7 @@ def deleteCategories(category_id):
 def showItems(category_id):
     categories = session.query(Category).order_by(Category.name.asc()).all()
     category = session.query(Category).filter_by(id=category_id).one()
-    items = session.query(Item).order_by(Item.name.desc()).filter_by(category_id=category_id)
-    items.all()
+    items = session.query(Items).order_by(Items.name.desc()).filter_by(category_id=category.id).all()
     return render_template('items.html',
                            categories=categories,
                            items=items,
@@ -342,7 +341,7 @@ def newItem(category_id):
 def editItem(category_id, item_id):
     categories = session.query(Category).order_by(asc(Category.name))
     category = session.query(Category).filter_by(id=category_id).one()
-    editItem = session.query(Item).filter_by(id=item_id).one()
+    editItem = session.query(Items).filter_by(id=item_id).one()
 
 # Authorization
     creator = getUserInfo(editItem.user_id)
@@ -372,7 +371,7 @@ def editItem(category_id, item_id):
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/delete',
            methods=['POST', 'GET'])
 def deleteItem(category_id, item_id):
-    deleteItem = session.query(Item).filter_by(id=item_id).one()
+    deleteItem = session.query(Items).filter_by(id=item_id).one()
 
 # Authorization
     creator = getUserInfo(deleteItem.user_id)
@@ -398,10 +397,10 @@ def allItemsJSON():
     categories = session.query(Category).all()
     category_dict = [c.serialize for c in categories]
     for c in range(len(category_dict)):
-        items = [i.serialize for i in session.query(Item)
+        items = [i.serialize for i in session.query(Items)
                   .filter_by(category_id=category_dict[c]["id"]).all()]
         if items:
-            category_dict[c]["Item"] = items
+            category_dict[c]["Items"] = items
     return jsonify(Category=category_dict)
 
 
@@ -413,23 +412,23 @@ def categoriesJSON():
 
 @app.route('/catalog/items/JSON')
 def itemsJSON():
-    items = session.query(Item).all()
+    items = session.query(Items).all()
     return jsonify(items=[i.serialize for i in items])
 
 
 @app.route('/catalog/<string:category_name>/items/JSON')
 def categoryItemsJSON(category_name):
     category = session.query(Category).filter_by(name=category_name).one()
-    items = session.query(Item).filter_by(category=category).all()
+    items = session.query(Items).filter_by(category=category).all()
     return jsonify(items=[i.serialize for i in items])
 
 
 @app.route('/catalog/<string:category_name>/<string:item_name>/JSON')
 def ItemJSON(category_name, item_name):
     category = session.query(Category).filter_by(name=category_name).one()
-    item = session.query(Item).filter_by(name=item_name,
+    item = session.query(Items).filter_by(name=item_name,
                                          category=category).one()
-    return jsonify(item=[item.serialize])
+    return jsonify(item=[items.serialize])
 
 
 if __name__ == '__main__':

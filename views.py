@@ -304,7 +304,7 @@ def showItems(category_id):
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/')
 def itemPage(category_id, item_id):
     categories = session.query(Category).order_by(asc(Category.name))
-    item = session.query(Item).filter_by(id=item_id).one()
+    item = session.query(Items).filter_by(id=item_id).one()
     return render_template('item.html',
                            item=item,
                            category_id=category_id,
@@ -319,7 +319,7 @@ def newItem(category_id):
 
     creator = getUserInfo(category.user_id)
     if request.method == 'POST' and creator.id != login_session['user_id']:
-        newItem = Item(name=request.form['name'],
+        newItem = Items(name=request.form['name'],
                        description=request.form['description'],
                        price=request.form['price'],
                        image=request.form['image'],
@@ -371,20 +371,22 @@ def editItem(category_id, item_id):
 @app.route('/catalog/<int:category_id>/items/<int:item_id>/delete',
            methods=['POST', 'GET'])
 def deleteItem(category_id, item_id):
-    deleteItem = session.query(Items).filter_by(id=item_id).one()
+    deleteItem = session.query(Items).filter_by(id=item_id).first()
 
 # Authorization
     creator = getUserInfo(deleteItem.user_id)
-    if request.method == 'POST' and creator.id != login_session['user_id']:
+
+    # If logged in user != item owner redirect them
+    if creator.id != login_session['user_id']:
+        flash ("You cannot delete this item. This item belongs to %s" % creator.name)
+        return redirect(url_for('showCatalog'))
+    if request.method =='POST':
         session.delete(deleteItem)
-        flash('\"%s\" Successfully Deleted' % deleteItem.name)
         session.commit()
+        flash('\"%s\" Successfully Deleted' % deleteItem.name)
         return redirect(url_for('showCategories', category_id=category_id))
     else:
-        flash('This is not your item to delete')
-        return render_template('deleteItem.html',
-                               item=deleteItem,
-                               category_id=category_id)
+        return render_template('deleteItem.html', item=deleteItem, category_id=category_id)
 
 
 """
@@ -425,9 +427,8 @@ def categoryItemsJSON(category_name):
 
 @app.route('/catalog/<string:category_name>/<string:item_name>/JSON')
 def ItemJSON(category_name, item_name):
-    category = session.query(Category).filter_by(name=category_name).one()
-    item = session.query(Items).filter_by(name=item_name,
-                                         category=category).one()
+    thiscategory = session.query(Category).filter_by(name=category_name).one()
+    items = session.query(Items).filter_by(name=item_name, category=thiscategory).one()
     return jsonify(item=[items.serialize])
 
 

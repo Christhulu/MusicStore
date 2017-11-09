@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div class="row text-center">
         <h1>Delete {{item.name}}?</h1>
-        <form action="{{url_for('deleteItem', item_id=item.id, category_id=category_id)}}" method="POST">
+        <form action="{{url_for('deleteItem', item_name=item.name, category_id=category.id)}}" method="POST">
             <button type="submit" class="btn">Delete</button>
             <a href="{{url_for('showCategories')}}" class="btn" role="button">Cancel</a>
         </form>

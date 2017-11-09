@@ -234,7 +234,8 @@ def newCategories():
 
 # Authorization
     creator = getUserInfo(categories.user_id)
-    if request.method == 'POST' and creator.id != login_session['user_id']:
+    user = getUserInfo(login_session['user_id'])
+    if request.method == 'POST' and creator.id != user.id:
         newCategory = Category(name=request.form['name'])
         session.add(newCategory)
         flash('New Category \"%s\" Successfully Created' % newCategory.name)
@@ -246,14 +247,15 @@ def newCategories():
 
 
 @login_required
-@app.route('/catalog/<int:category_id>/edit/', methods=['GET', 'POST'])
+@app.route('/catalog/<path:category_id>/edit/', methods=['GET', 'POST'])
 def editCategories(category_id):
     categories = session.query(Category).order_by(asc(Category.name))
     editCategory = session.query(Category).filter_by(id=category_id).one()
 
 # Authorization
     creator = getUserInfo(editCategory.user_id)
-    if request.method == 'POST' and creator.id != login_session['user_id']:
+    user = getUserInfo(login_session['user_id'])    
+    if request.method == 'POST' and creator.id != user.id:
         if request.form['name']:
             editCategory.name = request.form['name']
             session.add(editCategory)
@@ -268,14 +270,15 @@ def editCategories(category_id):
 
 
 @login_required
-@app.route('/catalog/<int:category_id>/delete/', methods=['GET', 'POST'])
+@app.route('/catalog/<path:category_id>/delete/', methods=['GET', 'POST'])
 def deleteCategories(category_id):
     categories = session.query(Category).order_by(asc(Category.name))
     deleteCategory = session.query(Category).filter_by(id=category_id).one()
 
 # Authorization
     creator = getUserInfo(deleteCategory.user_id)
-    if request.method == 'POST' and creator.id != login_session['user_id']:
+    user = getUserInfo(login_session['user_id'])
+    if request.method == 'POST' and creator.id != user.id:
         session.delete(deleteCategory)
         flash('\"%s\" Successfully Deleted' % deleteCategory.name)
         session.commit()
@@ -288,7 +291,7 @@ def deleteCategories(category_id):
 
 
 @login_required
-@app.route('/catalog/<int:category_id>/')
+@app.route('/catalog/<path:category_id>/')
 def showItems(category_id):
     categories = session.query(Category).order_by(Category.name.asc()).all()
     category = session.query(Category).filter_by(id=category_id).one()
@@ -301,7 +304,7 @@ def showItems(category_id):
 
 # Item CRUD operations
 @login_required
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/')
+@app.route('/catalog/<path:category_id>/items/<path:item_id>/')
 def itemPage(category_id, item_id):
     categories = session.query(Category).order_by(asc(Category.name))
     item = session.query(Items).filter_by(id=item_id).one()
@@ -313,12 +316,13 @@ def itemPage(category_id, item_id):
 
 
 @login_required
-@app.route('/catalog/<int:category_id>/new', methods=['POST', 'GET'])
+@app.route('/catalog/<path:category_id>/new', methods=['POST', 'GET'])
 def newItem(category_id):
     category = session.query(Category).filter_by(id=category_id).one()
 
     creator = getUserInfo(category.user_id)
-    if request.method == 'POST' and creator.id != login_session['user_id']:
+    user = getUserInfo(login_session['user_id'])
+    if request.method == 'POST' and creator.id != user.id:
         newItem = Items(name=request.form['name'],
                        description=request.form['description'],
                        price=request.form['price'],
@@ -336,8 +340,8 @@ def newItem(category_id):
 
 
 @login_required
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/edit',
-           methods=['POST', 'GET'])
+@app.route('/catalog/<path:category_id>/items/<path:item_id>/edit',
+           methods=['GET','POST'])
 def editItem(category_id, item_id):
     categories = session.query(Category).order_by(asc(Category.name))
     category = session.query(Category).filter_by(id=category_id).one()
@@ -345,7 +349,12 @@ def editItem(category_id, item_id):
 
 # Authorization
     creator = getUserInfo(editItem.user_id)
-    if request.method == 'POST' and creator.id != login_session['user_id']:
+    user = getUserInfo(login_session['user_id'])
+    # If logged in user != item owner redirect them
+    if creator.id != user.id:
+        flash ("You cannot edit this item. This item belongs to %s" % creator.name)
+        return redirect(url_for('showCategories'))
+    if request.method =='POST':
         if request.form['name']:
             editItem.name = request.form['name']
         if request.form['description']:
@@ -361,25 +370,26 @@ def editItem(category_id, item_id):
     else:
         flash('Log In if you want to edit this item')
         return render_template('editItem.html',
-                               category_id=category_id,
-                               item_id=item_id,
+                               category_id=category.id,
+                               item_id=editItem.id,
                                item=editItem,
                                categories=categories)
 
 
+
 @login_required
-@app.route('/catalog/<int:category_id>/items/<int:item_id>/delete',
+@app.route('/catalog/<path:category_id>/items/<path:item_id>/delete',
            methods=['POST', 'GET'])
 def deleteItem(category_id, item_id):
     deleteItem = session.query(Items).filter_by(id=item_id).first()
 
 # Authorization
     creator = getUserInfo(deleteItem.user_id)
-
+    user = getUserInfo(login_session['user_id'])
     # If logged in user != item owner redirect them
-    if creator.id != login_session['user_id']:
+    if creator.id != user.id:
         flash ("You cannot delete this item. This item belongs to %s" % creator.name)
-        return redirect(url_for('showCatalog'))
+        return redirect(url_for('showCategories'))
     if request.method =='POST':
         session.delete(deleteItem)
         session.commit()
@@ -418,14 +428,14 @@ def itemsJSON():
     return jsonify(items=[i.serialize for i in items])
 
 
-@app.route('/catalog/<string:category_name>/items/JSON')
+@app.route('/catalog/<path:category_name>/items/JSON')
 def categoryItemsJSON(category_name):
     category = session.query(Category).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category=category).all()
     return jsonify(items=[i.serialize for i in items])
 
 
-@app.route('/catalog/<string:category_name>/<string:item_name>/JSON')
+@app.route('/catalog/<path:category_name>/<path:item_name>/JSON')
 def ItemJSON(category_name, item_name):
     thiscategory = session.query(Category).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(name=item_name, category=thiscategory).one()

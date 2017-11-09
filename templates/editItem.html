@@ -2,10 +2,14 @@
  <div class="container-fluid">
     <div class="row text-center">
     <form action="{{ url_for('editItem', category_id = category_id, item_id=item_id)}}" method='post'>
-      <label for="title">Title:</label>
-      <input type="text" name='title' value="{{item.name}}" placeholder = {{item.name}}> <br>
+      <label for="name">Name:</label>
+      <input type="text" name='name' value="{{item.name}}" placeholder = {{item.name}}> <br>
       <label for="description">Description:</label> <br>
       <textarea name="description" rows="8" cols="40">{{item.description}}</textarea><br> <br>
+      <label for="image">Image:</label> <br>
+      <input type="text" name="image" value="{{item.image}}" placeholder = {{item.image}}>{{item.image}}</input><br>
+      <label for="name">Price:</label>
+      <input type="text" name='price' value="{{item.price}}" placeholder = {{item.price}}> <br>
       <input class="btn btn-block btn-success center" type='submit' value='Update'>
 	</form>
     <br>

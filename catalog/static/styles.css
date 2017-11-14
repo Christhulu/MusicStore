@@ -1,0 +1,42 @@
+    body {
+        background-color: #eee;
+    }
+    
+    .item-info {
+        font-family: 'Roboto','sans-serif';
+    }
+
+    .navbar-brand {
+        height: 80px;
+    }
+    
+    .logo {
+        height: 75px;
+    }
+    
+    .nav >li >button {
+        padding-top: 30px;
+        height: 90px;
+    }
+    
+    .single-item {
+        background-color: white;
+        margin: 25px;
+        height: 530px;
+    }
+    
+    .item-info {
+        margin-top: -15px;
+    }
+    
+    a,
+    a:visited,
+    a:active {
+        color: blue;
+    }
+    
+    a:hover {
+        color: red;
+    }
+    
+    

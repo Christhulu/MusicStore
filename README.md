@@ -10,7 +10,7 @@ Instructions
 ============================
 
 Run lotsofitems.py using the command `python lotsofitems.py`
-Run views.py using the command `python views.py`
+Run views.py using the command `python run.py`
 Access localhost:5000 to start navigating the catalog
 
 

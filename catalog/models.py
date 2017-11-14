@@ -13,7 +13,8 @@ class User(Base):
     name = Column(String(250), nullable = False)
     email = Column(String(250), nullable = False)
     picture = Column(String(250))
-
+    categories = relationship('Category', cascade='all, delete', backref = 'user')
+    items = relationship('Items', cascade='all, delete', backref = 'user')
 
 class Category(Base):
     __tablename__ = 'category'
@@ -21,8 +22,8 @@ class Category(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User, backref=backref('user', cascade='all, delete'))
-
+    user = relationship('User', backref=backref('categories', cascade='all, delete'))
+    items = relationship('Items', cascade='all, delete', backref = 'category')
     @property
     def serialize(self):
        """Return object data in easily serializeable format"""
@@ -40,9 +41,9 @@ class Items(Base):
     price = Column(String(8))
     image = Column(String(250))
     category_id = Column(Integer, ForeignKey('category.id'))
-    category = relationship(Category, backref=backref('items', cascade='all, delete'))
+    category = relationship('Category', backref=backref('category', cascade='all, delete'))
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User, backref="items")
+    user = relationship('User', backref=backref('items', cascade='all, delete'))
 
 
     @property

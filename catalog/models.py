@@ -13,8 +13,8 @@ class User(Base):
     name = Column(String(250), nullable = False)
     email = Column(String(250), nullable = False)
     picture = Column(String(250))
-    categories = relationship('Category', cascade='all, delete', backref = 'user')
-    items = relationship('Items', cascade='all, delete', backref = 'user')
+    categories = relationship('Category', cascade='all, delete-orphan', backref = 'user')
+    items = relationship('Items', cascade='all, delete-orphan', backref = 'user')
 
 class Category(Base):
     __tablename__ = 'category'
@@ -23,7 +23,7 @@ class Category(Base):
     name = Column(String(250), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship('User', backref=backref('categories', cascade='all, delete'))
-    items = relationship('Items', cascade='all, delete', backref = 'category')
+    items = relationship('Items', cascade='all, delete-orphan', backref = 'category')
     @property
     def serialize(self):
        """Return object data in easily serializeable format"""
